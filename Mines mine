@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>Mini Mines - Jogo Pago</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 30px;
+    }
+    #pagamento, #jogo {
+      display: none;
+    }
+    #pagamento.ativo, #jogo.ativo {
+      display: block;
+    }
+    #game {
+      display: grid;
+      grid-template-columns: repeat(5, 50px);
+      grid-template-rows: repeat(5, 50px);
+      gap: 5px;
+      margin-top: 20px;
+      justify-content: center;
+    }
+    .cell {
+      width: 50px;
+      height: 50px;
+      background-color: #ccc;
+      text-align: center;
+      line-height: 50px;
+      font-size: 18px;
+      cursor: pointer;
+      border: 1px solid #999;
+    }
+    .revealed {
+      background-color: #eee;
+      cursor: default;
+    }
+    .mine {
+      background-color: red;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Mini Mines - R$5</h1>
+
+  <div id="inicio" class="ativo">
+    <p>Para jogar, pague <strong>R$5 via Pix</strong>.</p>
+    <img src="https://via.placeholder.com/200x200.png?text=QR+Code+Pix" alt="QR Code Pix">
+    <p><strong>Chave Pix:</strong> seuemail@pix.com</p>
+    <button onclick="simularPagamento()">Já paguei!</button>
+  </div>
+
+  <div id="pagamento">
+    <p>Verificando pagamento...</p>
+  </div>
+
+  <div id="jogo">
+    <h2>Boa sorte!</h2>
+    <div id="game"></div>
+  </div>
+
+  <script>
+    let cells = [];
+    const gameSize = 5;
+    const mineCount = 5;
+
+    function simularPagamento() {
+      document.getElementById("inicio").classList.remove("ativo");
+      document.getElementById("pagamento").classList.add("ativo");
+
+      setTimeout(() => {
+        alert("Pagamento confirmado!");
+        document.getElementById("pagamento").classList.remove("ativo");
+        document.getElementById("jogo").classList.add("ativo");
+        iniciarJogo();
+      }, 2000); // Simula verificação em 2 segundos
+    }
+
+    function iniciarJogo() {
+      const game = document.getElementById("game");
+      game.innerHTML = "";
+      cells = [];
+      const minas = new Set();
+      while (minas.size < mineCount) {
+        minas.add(Math.floor(Math.random() * gameSize * gameSize));
+      }
+
+      for (let i = 0; i < gameSize * gameSize; i++) {
+        const cell = document.createElement("div");
+        cell.classList.add("cell");
+        cell.dataset.index = i;
+        cell.dataset.mine = minas.has(i);
+        cell.addEventListener("click", clicarCelula);
+        game.appendChild(cell);
+        cells.push(cell);
+      }
+    }
+
+    function clicarCelula(e) {
+      const cell = e.target;
+      if (cell.classList.contains("revealed")) return;
+      cell.classList.add("revealed");
+
+      if (cell.dataset.mine === "true") {
+        cell.classList.add("mine");
+        cell.innerText = "💣";
+        alert("Você perdeu!");
+        revelarTudo();
+      } else {
+        const qtd = contarMinas(cell);
+        cell.innerText = qtd || "";
+      }
+    }
+
+    function contarMinas(cell) {
+      const index = parseInt(cell.dataset.index);
+      const x = index % gameSize;
+      const y = Math.floor(index / gameSize);
+      let count = 0;
+
+      for (let dx = -1; dx <= 1; dx++) {
+        for (let dy = -1; dy <= 1; dy++) {
+          if (dx === 0 && dy === 0) continue;
+          const nx = x + dx;
+          const ny = y + dy;
+          if (nx >= 0 && ny >= 0 && nx < gameSize && ny < gameSize) {
+            const idx = ny * gameSize + nx;
+            if (cells[idx].dataset.mine === "true") count++;
+          }
+        }
+      }
+      return count;
+    }
+
+    function revelarTudo() {
+      for (const cell of cells) {
+        if (cell.dataset.mine === "true") {
+          cell.classList.add("revealed", "mine");
+          cell.innerText = "💣";
+        }
+      }
+    }
+  </script>
+</body>
+</html>
